@@ -1,0 +1,6 @@
+apiVersion: v2
+name: incident-service
+description: Fusion Incident Service - incident tracking API, with an optional dedicated PostgreSQL
+type: application
+version: 0.1.0 # chart version - bump on any chart change
+appVersion: "1.0.0" # the application version this chart deploys

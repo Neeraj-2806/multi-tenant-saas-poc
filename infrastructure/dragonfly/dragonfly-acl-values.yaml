@@ -1,0 +1,12 @@
+extraArgs:
+  - "--aclfile=/etc/dragonfly-acl/dragonfly.acl"
+
+extraVolumes:
+  - name: dragonfly-acl
+    secret:
+      secretName: dragonfly-acl
+
+extraVolumeMounts:
+  - name: dragonfly-acl
+    mountPath: /etc/dragonfly-acl
+    readOnly: true

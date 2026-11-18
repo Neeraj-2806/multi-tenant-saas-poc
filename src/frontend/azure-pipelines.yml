@@ -1,0 +1,63 @@
+# Frontend CI - runs on merge to main. Follows docs/service-delivery.md.
+# REPLACE-ME values do not exist yet; fill them in once the ECR repos / access are created.
+
+trigger:
+  branches:
+    include: [main]
+  paths:
+    include:
+      - app/src/frontend/**   # CI commits only under gitops/, so this cannot re-trigger itself
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  REGISTRY: 779316103690.dkr.ecr.us-east-1.amazonaws.com
+  AWS_REGION: us-east-1
+  DEPLOYMENT_REPO: https://dev.azure.com/Motadata/NextGen/_git/infra-poc   # REPLACE-ME if the deployment repo is a different one
+
+steps:
+  # AWS identity on the agent: ECR read/write, NO cluster access.   REPLACE-ME: how credentials reach the agent
+  - script: |
+      SHA=$(git rev-parse --short HEAD)
+      cd app/src/frontend
+
+      # 1. Build and push the image with an immutable tag - never :latest
+      # (arm64 because the nodes are Graviton; the agent is amd64)
+      docker run --privileged --rm tonistiigi/binfmt --install arm64
+      aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REGISTRY
+      docker buildx build --platform linux/arm64 -t $REGISTRY/fusion/frontend:sha-$SHA --push .
+
+      # 2. Package and push the chart as an OCI artifact
+      CHART_VERSION=$(yq '.version' chart/Chart.yaml)
+      helm package chart/
+      # ECR tags are immutable: skip the push when this chart version is already in ECR
+      if aws ecr describe-images --repository-name fusion/charts/frontend \
+           --image-ids imageTag=$CHART_VERSION --region $AWS_REGION >/dev/null 2>&1; then
+        echo "Chart $CHART_VERSION already in ECR, skipping push"
+      else
+        aws ecr get-login-password --region $AWS_REGION | helm registry login --username AWS --password-stdin $REGISTRY
+        helm push frontend-$CHART_VERSION.tgz oci://$REGISTRY/fusion/charts
+      fi
+
+      echo "##vso[task.setvariable variable=SHA]$SHA"
+      echo "##vso[task.setvariable variable=CHART_VERSION]$CHART_VERSION"
+    displayName: Build image and package chart
+
+  # 3. Commit the new version into the deployment repo - the deployment trigger
+  - script: |
+      # Auth: the pipeline's own identity (needs Contribute on the deployment repo).
+      AUTH="AUTHORIZATION: bearer $(System.AccessToken)"
+      git -c http.extraheader="$AUTH" clone $DEPLOYMENT_REPO deploy
+      cd deploy
+      git config user.name "Azure DevOps CI"
+      git config user.email "ci@example.invalid"
+      cat > gitops/base/platform/frontend/version.yaml <<EOV
+      chartVersion: "$(CHART_VERSION)"
+      imageTag: "sha-$(SHA)"
+      EOV
+      git commit -am "chore(frontend): $(CHART_VERSION) / sha-$(SHA)"
+      git -c http.extraheader="$AUTH" push
+    displayName: Write version.yaml

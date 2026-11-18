@@ -1,0 +1,65 @@
+# DEFAULTS ONLY - no environment names, no real registry URL, no replica count "for prod",
+# no IRSA annotation. Environment values live in gitops/base/platform/frontend/.
+
+nameOverride: ""
+fullnameOverride: frontend
+
+replicaCount: 1
+
+image:
+  repository: "" # supplied by values-common.yaml
+  tag: "" # supplied by version.yaml
+  pullPolicy: IfNotPresent
+
+# nginx runs unprivileged and listens on 8080 (a non-root process cannot bind port 80).
+containerPort: 8080
+
+service:
+  type: ClusterIP
+  port: 80 # the Service keeps port 80; it forwards to containerPort
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {} # empty - Pod Identity, not IRSA
+
+podSecurityContext: {}
+securityContext: {}
+nodeSelector: {}
+
+strategy:
+  maxSurge: 1
+  maxUnavailable: 0
+
+pdb:
+  enabled: true
+  maxUnavailable: 1
+
+autoscaling:
+  enabled: false # needs metrics-server
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits: { cpu: 200m, memory: 256Mi }
+
+livenessProbe:
+  enabled: false
+  httpGet: { path: /, port: 8080 }
+  initialDelaySeconds: 10
+  periodSeconds: 10
+readinessProbe:
+  enabled: false
+  httpGet: { path: /, port: 8080 }
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+# Istio VirtualService on the shared gateway. Off by default; values-common.yaml turns it on.
+istio:
+  enabled: false
+  gateway:
+    name: ""
+    namespace: ""
+  host: ""

@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "incident-service.fullname" . }}-config
+  labels:
+    {{- include "incident-service.labels" . | nindent 4 }}
+data:
+  {{- if .Values.postgres.enabled }}
+  PG_HOST: {{ include "incident-service.postgresServiceName" . | quote }}
+  {{- else }}
+  PG_HOST: {{ required "postgres.externalHost is required when postgres.enabled=false" .Values.postgres.externalHost | quote }}
+  {{- end }}
+  PG_PORT: {{ .Values.postgres.port | quote }}
+  PG_USER: {{ .Values.postgres.user | quote }}
+  PG_DATABASE: {{ .Values.postgres.database | quote }}
+  PG_SCHEMA: {{ .Values.postgres.schema | quote }}
+  PG_CREATE_SCHEMA: {{ .Values.postgres.createSchema | quote }}
+
+  CACHE_ENABLED: {{ .Values.cache.enabled | quote }}
+  CACHE_URL: {{ if .Values.cache.enabled }}{{ required "cache.url is required when cache.enabled=true" .Values.cache.url | quote }}{{ else }}{{ .Values.cache.url | quote }}{{ end }}
+  CACHE_TTL_SECONDS: {{ .Values.cache.ttlSeconds | quote }}
+  CACHE_USERNAME: {{ if .Values.cache.enabled }}{{ required "cache.username is required when cache.enabled=true" .Values.cache.username | quote }}{{ else }}{{ .Values.cache.username | quote }}{{ end }}
+
+  NATS_ENABLED: {{ .Values.nats.enabled | quote }}
+  NATS_URL: {{ if .Values.nats.enabled }}{{ required "nats.url required when enabled" .Values.nats.url | quote }}{{ else }}{{ .Values.nats.url | quote }}{{ end }}
+  NATS_STREAM: {{ .Values.nats.stream | quote }}

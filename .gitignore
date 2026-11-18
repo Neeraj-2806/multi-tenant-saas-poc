@@ -1,0 +1,22 @@
+# Environment and credentials
+.env
+.env.*
+*.pem
+*.key
+*credentials*
+*password*
+*.acl
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Local files
+node_modules/
+helm-backup/
+*.zip
+.DS_Store
+# Sensitive Dragonfly documentation
+docs/Dragonfly-explanation/Dragonfly-secrets-username.txt
+
+# Local infrastructure chart archive
+infrastructure/nats/*.tgz
