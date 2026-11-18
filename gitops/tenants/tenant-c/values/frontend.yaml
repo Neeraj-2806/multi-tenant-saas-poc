@@ -1,0 +1,7 @@
+image:
+  repository: frontend
+  tag: local
+  pullPolicy: Never
+
+istio:
+  enabled: false
