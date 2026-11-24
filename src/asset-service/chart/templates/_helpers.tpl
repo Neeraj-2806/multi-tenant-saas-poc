@@ -1,3 +1,4 @@
+
 {{- define "asset-service.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
@@ -36,22 +37,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
-{{- define "asset-service.postgresServiceName" -}}
-{{ include "asset-service.fullname" . }}-postgres
-{{- end }}
-
-{{- define "asset-service.postgresSecretName" -}}
-{{- default (printf "%s-postgres" (include "asset-service.fullname" .)) .Values.postgres.auth.existingSecret }}
-{{- end }}
-
-{{- define "asset-service.postgresLabels" -}}
-helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-app.kubernetes.io/name: {{ include "asset-service.name" . }}-postgres
-app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{- define "asset-service.postgresSelectorLabels" -}}
-app.kubernetes.io/name: {{ include "asset-service.name" . }}-postgres
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "asset-service.databaseSecretName" -}}
+{{- required "postgres.auth.existingSecret is required" .Values.postgres.auth.existingSecret }}
 {{- end }}

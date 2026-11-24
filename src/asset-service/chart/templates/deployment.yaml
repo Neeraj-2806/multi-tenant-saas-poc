@@ -1,3 +1,4 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -54,7 +55,7 @@ spec:
             - name: PG_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "asset-service.postgresSecretName" . }}
+                  name: {{ include "asset-service.databaseSecretName" . }}
                   key: password
             {{- if .Values.cache.enabled }}
             - name: CACHE_PASSWORD

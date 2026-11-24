@@ -1,3 +1,4 @@
+
 {{- define "incident-service.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
@@ -36,22 +37,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
-{{- define "incident-service.postgresServiceName" -}}
-{{ include "incident-service.fullname" . }}-postgres
-{{- end }}
-
-{{- define "incident-service.postgresSecretName" -}}
-{{- default (printf "%s-postgres" (include "incident-service.fullname" .)) .Values.postgres.auth.existingSecret }}
-{{- end }}
-
-{{- define "incident-service.postgresLabels" -}}
-helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-app.kubernetes.io/name: {{ include "incident-service.name" . }}-postgres
-app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{- define "incident-service.postgresSelectorLabels" -}}
-app.kubernetes.io/name: {{ include "incident-service.name" . }}-postgres
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "incident-service.databaseSecretName" -}}
+{{- required "postgres.auth.existingSecret is required" .Values.postgres.auth.existingSecret }}
 {{- end }}
