@@ -1,0 +1,26 @@
+image:
+  repository: incident-service
+  tag: nats-v1
+  pullPolicy: Never
+
+postgres:
+  enabled: false
+  createSchema: false
+  externalHost: platform-postgres-rw.platform.svc.cluster.local
+  database: platform_db
+  schema: tenant_cd
+  user: tenant_cd_user
+  auth:
+    existingSecret: tenant-cd-db-credentials
+
+cache:
+  enabled: true
+  url: redis://dragonfly.dragonfly.svc.cluster.local:6379
+  username: tenant_cd_cache_user
+  existingSecret: dragonfly-cache-tenant-cd
+  ttlSeconds: 60
+
+nats:
+  enabled: true
+  url: nats://nats.nats.svc.cluster.local:4222
+  stream: ASSET_EVENTS
